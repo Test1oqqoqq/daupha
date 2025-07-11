@@ -1,80 +1,39 @@
 module.exports = class {
     static config = {
-        name: "example",
-        aliases: ["example"],
+        name: "daupha",
+        aliases: ["daupha", "dauphatruyen", "dpt"],
         version: "1.0.0",
         role: 0,
         author: "Panna",
-        info: "",
-        Category: "Admin",
-        guides: "",
+        info: "Đọc truyện Đấu Phá Thương Khung.",
+        Category: "Truyện",
+        guides: "{pn}daupha [số chương] - Đọc chương Đấu Phá Thương Khung",
         cd: 5,
         hasPrefix: true,
         images: []
     };
 
     static async onRun({ api, event, msg, model, Threads, Users, Currencies, args }) {
-        // Logic for onRun
+        // Ví dụ: Đọc chương Đấu Phá Thương Khung
+        const chapter = args[0] || 1;
+        // TODO: Thay thế bằng logic lấy nội dung chương từ nguồn phù hợp
+        const content = `Đây là nội dung chương ${chapter} của Đấu Phá Thương Khung (demo).`;
+        return api.sendMessage(content, event.threadID, event.messageID);
     }
 
     static async onEvent({ api, event, msg, model, Threads, Users, Currencies, args }) {
-        // Logic for onEvent
+        // Logic cho event nếu cần
     }
 
     static async onReaction({ api, event, msg, model, Threads, Users, Currencies, args, onReaction }) {
-        // Logic for onReaction
+        // Logic cho reaction nếu cần
     }
 
     static async onLoad({ api, model }) {
-        // Logic for onLoad
+        // Logic khi load module nếu cần
     }
 
     static async onReply({ api, event, msg, model, Threads, Users, Currencies, args, onReply }) {
-        // Logic for onReply
+        // Logic cho reply nếu cần
     }
 }
-
-/*
-this.config = {
- name: "example",
- aliases: ["example"],
- version: "1.2.9",
- role: 3,
- author: "Panna",
- info: "",
- Category: "Admin",
- guides: "[]",
- cd: 5,
- hasPrefix: true,
- images: [],
-};
-this.onRun = async o=>{};
-this.onLoad = async o=>{};
-this.onEvent = async o=>{};
-this.onReaction = async o=>{};
-this.onReply = async o=>{};
-*/
-
-
-/*
-module.exports = {
-  config: {
-    name: "example",
-    aliases: [""],
-    version: "1.0.0",
-    role: 0,
-    author: "Panna",
-    info: "",
-    Category: "Admin",
-    guides: "",
-    cd: 5,
-    hasPrefix: true
-    images: [],
-  },
-  onRun: async o=>{},
-  onEvent: async o=>{},
-  onReaction: async o=>{},
-  onLoad: async o=>{},
-  onReply: async o=>{},
-}
-*/
