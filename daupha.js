@@ -51,6 +51,21 @@ const LUYENDUOC = [
     { id: 2, name: "Bồi Nguyên Đan", desc: "Hồi phục nguyên khí" }
 ];
 
+// Dữ liệu mẫu cho craft, boss, quest, pvp
+const CRAFTS = [
+    { id: 1, name: "Huyền Thiết Kiếm", require: { "Thanh Tâm Đan": 1, "Dị Hỏa": 1 }, desc: "Kiếm tăng 10% EXP khi luyện dược" },
+    { id: 2, name: "Bảo Hộ Phù", require: { "Bồi Nguyên Đan": 2 }, desc: "Giảm 10% xu khi mua shop" }
+];
+const BOSSES = [
+    { id: 1, name: "Hắc Ám Ma Viên", hp: 500, reward: "Dị Hỏa, 200 xu, 200 EXP" },
+    { id: 2, name: "Viêm Long", hp: 1000, reward: "Trang bị hiếm, 500 xu, 500 EXP" }
+];
+const QUESTS = [
+    { id: 1, name: "Luyện dược 1 lần", desc: "Luyện thành công 1 dược phẩm", reward: "50 xu, 50 EXP" },
+    { id: 2, name: "Đổi cấp đấu khí", desc: "Lên cấp đấu khí mới", reward: "100 xu, 100 EXP" },
+    { id: 3, name: "Tham gia PvP", desc: "Tham gia 1 trận PvP", reward: "70 xu, 70 EXP" }
+];
+
 module.exports = class {
     static config = {
         name: "daupha",
@@ -269,23 +284,26 @@ module.exports = class {
         }
         // Quest
         if (sub === "quest") {
-            // Khung nhiệm vụ demo
-            return api.sendMessage(`🎯 Nhiệm vụ hàng ngày:\n- Luyện dược 1 lần\n- Đổi cấp đấu khí\n- Tham gia PvP\n\n(Chức năng nhiệm vụ sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+            // Hiển thị nhiệm vụ mẫu
+            const questList = QUESTS.map(q => `ID: ${q.id} | ${q.name} - ${q.desc} | Thưởng: ${q.reward}`).join("\n");
+            return api.sendMessage(`🎯 Nhiệm vụ hàng ngày:\n${questList}\n\n(Chức năng nhiệm vụ sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
         }
         // PvP
         if (sub === "pvp") {
-            // Khung PvP demo
+            // PvP mẫu: chỉ phản hồi hướng dẫn
             return api.sendMessage(`⚔️ PvP đấu trường:\nDùng {pn}daupha pvp [@tag] để thách đấu người khác!\n(Chức năng PvP sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
         }
         // Boss
         if (sub === "boss") {
-            // Khung săn boss demo
-            return api.sendMessage(`🐲 Săn boss:\nTham gia săn boss nhận vật phẩm hiếm!\n(Chức năng boss sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+            // Hiển thị boss mẫu
+            const bossList = BOSSES.map(b => `ID: ${b.id} | ${b.name} - HP: ${b.hp} | Thưởng: ${b.reward}`).join("\n");
+            return api.sendMessage(`🐲 Boss hiện tại:\n${bossList}\n\nDùng {pn}daupha boss danh [id] để tấn công!\n(Chức năng boss sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
         }
         // Craft
         if (sub === "craft") {
-            // Khung chế tạo demo
-            return api.sendMessage(`⚒️ Chế tạo trang bị:\nDùng vật phẩm để chế tạo trang bị đặc biệt!\n(Chức năng craft sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+            // Hiển thị công thức craft mẫu
+            const craftList = CRAFTS.map(c => `ID: ${c.id} | ${c.name} - Yêu cầu: ${Object.entries(c.require).map(([k,v])=>`${v} ${k}`).join(", ")} | ${c.desc}`).join("\n");
+            return api.sendMessage(`⚒️ Chế tạo trang bị:\n${craftList}\n\nDùng {pn}daupha craft [id] để chế tạo!\n(Chức năng craft sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
         }
 
         return api.sendMessage("Lệnh không hợp lệ. Dùng {pn}daupha menu để xem hướng dẫn.", event.threadID, event.messageID);
