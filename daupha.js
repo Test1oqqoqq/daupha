@@ -1,11 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 
-const DATA_PATH = path.join(__dirname, "daupha_data.json");
+const DATA_PATH = path.join(__dirname, "system", "data", "daupha_data.json");
 
-// Khởi tạo dữ liệu nếu chưa có
 function loadData() {
     if (!fs.existsSync(DATA_PATH)) {
+        fs.mkdirSync(path.dirname(DATA_PATH), { recursive: true });
         fs.writeFileSync(DATA_PATH, JSON.stringify({ users: {} }, null, 2));
     }
     return JSON.parse(fs.readFileSync(DATA_PATH));
@@ -25,16 +25,42 @@ const SHOP = [
     { id: 2, name: "Bí kíp kỹ năng", desc: "Mở khóa kỹ năng mới", price: 200 },
 ];
 
+const DOUQI = [
+    "Đấu giả", "Đấu sư", "Đại đấu sư", "Đấu linh", "Đấu vương", "Đấu hoàng", "Đấu tông", "Đấu tôn", "Đấu thánh", "Đấu đế"
+];
+
+const DIHOA = [
+    "Thanh Liên Địa Tâm Hỏa", "Tịnh Liên Yêu Hỏa", "Kim Đế Phần Thiên Diễm", "Hư Vô Thôn Viêm"
+];
+
+const GIATOC = [
+    "Tiêu Gia", "Nạp Lan Gia", "Mễ Đặc Nhĩ Gia", "Gia Mã Đế Quốc"
+];
+
+const SUPHU = [
+    "Dược Lão", "Pháp Lão", "Hàn Phong", "Huân Nhi"
+];
+
+const DAUGIA = [
+    { id: 1, name: "Dị Hỏa", desc: "Ngọn lửa hiếm có, tăng sức mạnh lớn" },
+    { id: 2, name: "Linh Dược", desc: "Dược liệu quý hiếm" }
+];
+
+const LUYENDUOC = [
+    { id: 1, name: "Thanh Tâm Đan", desc: "Tăng đấu khí" },
+    { id: 2, name: "Bồi Nguyên Đan", desc: "Hồi phục nguyên khí" }
+];
+
 module.exports = class {
     static config = {
         name: "daupha",
         aliases: ["daupha", "dauphatruyen", "dpt"],
-        version: "1.1.0",
+        version: "1.2.0",
         role: 0,
         author: "Panna",
-        info: "Đọc truyện, rank, skills, shop Đấu Phá Thương Khung.",
+        info: "Đấu Phá Thương Khung: skills, shop, đấu khí, dị hỏa, gia tộc, sư phụ, đấu giá, luyện dược.",
         Category: "Truyện",
-        guides: "{pn}daupha [chương|rank|skills|shop|info]",
+        guides: "{pn}daupha [rank|skills|shop|info|douqi|dihoa|giatoc|suphu|daugia|luyenduoc]",
         cd: 5,
         hasPrefix: true,
         images: []
@@ -50,19 +76,16 @@ module.exports = class {
                 exp: 0,
                 coins: 100,
                 skills: [],
-                items: []
+                items: [],
+                douqi: DOUQI[0],
+                dihoa: [],
+                giatoc: GIATOC[0],
+                suphu: SUPHU[0]
             };
             saveData(data);
         }
         const user = data.users[userID];
         const sub = (args[0] || "").toLowerCase();
-
-        // Đọc truyện
-        if (!sub || !isNaN(sub)) {
-            const chapter = sub || 1;
-            // TODO: Lấy nội dung chương thực tế
-            return api.sendMessage(`Đây là nội dung chương ${chapter} của Đấu Phá Thương Khung (demo).`, event.threadID, event.messageID);
-        }
 
         // Rank
         if (sub === "rank") {
@@ -129,18 +152,42 @@ module.exports = class {
                 return it ? it.name : "";
             }).join(", ") || "Không có";
             return api.sendMessage(
-                `👤 Thông tin nhân vật:
-Tên: ${user.name}
-Cấp: ${user.level}
-EXP: ${user.exp}
-Xu: ${user.coins}
-Kỹ năng: ${mySkills}
-Vật phẩm: ${myItems}`,
+                `👤 Thông tin nhân vật:\nTên: ${user.name}\nCấp: ${user.level}\nEXP: ${user.exp}\nXu: ${user.coins}\nKỹ năng: ${mySkills}\nVật phẩm: ${myItems}\nĐấu khí: ${user.douqi}\nDị hỏa: ${(user.dihoa && user.dihoa.length) ? user.dihoa.join(", ") : "Không có"}\nGia tộc: ${user.giatoc}\nSư phụ: ${user.suphu}`,
                 event.threadID, event.messageID
             );
         }
 
-        return api.sendMessage("Lệnh không hợp lệ. Dùng {pn}daupha [chương|rank|skills|shop|info]", event.threadID, event.messageID);
+        // Đấu khí
+        if (sub === "douqi") {
+            return api.sendMessage(`Các cấp bậc Đấu khí:\n${DOUQI.map((d, i) => `${i + 1}. ${d}`).join("\n")}`, event.threadID, event.messageID);
+        }
+
+        // Dị hỏa
+        if (sub === "dihoa") {
+            return api.sendMessage(`Các loại Dị Hỏa nổi bật:\n${DIHOA.map((d, i) => `${i + 1}. ${d}`).join("\n")}`, event.threadID, event.messageID);
+        }
+
+        // Gia tộc
+        if (sub === "giatoc") {
+            return api.sendMessage(`Các gia tộc lớn:\n${GIATOC.map((g, i) => `${i + 1}. ${g}`).join("\n")}`, event.threadID, event.messageID);
+        }
+
+        // Sư phụ
+        if (sub === "suphu") {
+            return api.sendMessage(`Các sư phụ nổi bật:\n${SUPHU.map((s, i) => `${i + 1}. ${s}`).join("\n")}`, event.threadID, event.messageID);
+        }
+
+        // Đấu giá
+        if (sub === "daugia") {
+            return api.sendMessage(`Các vật phẩm đấu giá nổi bật:\n${DAUGIA.map(i => `ID: ${i.id} | ${i.name} - ${i.desc}`).join("\n")}`, event.threadID, event.messageID);
+        }
+
+        // Luyện dược
+        if (sub === "luyenduoc") {
+            return api.sendMessage(`Các loại dược phẩm nổi bật:\n${LUYENDUOC.map(i => `ID: ${i.id} | ${i.name} - ${i.desc}`).join("\n")}`, event.threadID, event.messageID);
+        }
+
+        return api.sendMessage("Lệnh không hợp lệ. Dùng {pn}daupha [rank|skills|shop|info|douqi|dihoa|giatoc|suphu|daugia|luyenduoc]", event.threadID, event.messageID);
     }
 
     static async onEvent({ api, event, msg, model, Threads, Users, Currencies, args }) {
