@@ -159,22 +159,52 @@ module.exports = class {
 
         // Đấu khí
         if (sub === "douqi") {
-            return api.sendMessage(`Các cấp bậc Đấu khí:\n${DOUQI.map((d, i) => `${i + 1}. ${d}`).join("\n")}`, event.threadID, event.messageID);
+            if (args[1] === "chon" && args[2]) {
+                const idx = parseInt(args[2]) - 1;
+                if (idx < 0 || idx >= DOUQI.length) return api.sendMessage("ID đấu khí không hợp lệ!", event.threadID, event.messageID);
+                user.douqi = DOUQI[idx];
+                saveData(data);
+                return api.sendMessage(`Bạn đã chọn cấp bậc đấu khí: ${user.douqi}`, event.threadID, event.messageID);
+            }
+            return api.sendMessage(`Các cấp bậc Đấu khí:\n${DOUQI.map((d, i) => `${i + 1}. ${d}`).join("\n")}\n\nChọn: {pn}daupha douqi chon [id]`, event.threadID, event.messageID);
         }
 
         // Dị hỏa
         if (sub === "dihoa") {
-            return api.sendMessage(`Các loại Dị Hỏa nổi bật:\n${DIHOA.map((d, i) => `${i + 1}. ${d}`).join("\n")}`, event.threadID, event.messageID);
+            if (args[1] === "chon" && args[2]) {
+                const idx = parseInt(args[2]) - 1;
+                if (idx < 0 || idx >= DIHOA.length) return api.sendMessage("ID dị hỏa không hợp lệ!", event.threadID, event.messageID);
+                if (!user.dihoa) user.dihoa = [];
+                if (user.dihoa.includes(DIHOA[idx])) return api.sendMessage("Bạn đã sở hữu dị hỏa này!", event.threadID, event.messageID);
+                user.dihoa.push(DIHOA[idx]);
+                saveData(data);
+                return api.sendMessage(`Bạn đã nhận dị hỏa: ${DIHOA[idx]}`, event.threadID, event.messageID);
+            }
+            return api.sendMessage(`Các loại Dị Hỏa nổi bật:\n${DIHOA.map((d, i) => `${i + 1}. ${d}`).join("\n")}\n\nNhận: {pn}daupha dihoa chon [id]`, event.threadID, event.messageID);
         }
 
         // Gia tộc
         if (sub === "giatoc") {
-            return api.sendMessage(`Các gia tộc lớn:\n${GIATOC.map((g, i) => `${i + 1}. ${g}`).join("\n")}`, event.threadID, event.messageID);
+            if (args[1] === "chon" && args[2]) {
+                const idx = parseInt(args[2]) - 1;
+                if (idx < 0 || idx >= GIATOC.length) return api.sendMessage("ID gia tộc không hợp lệ!", event.threadID, event.messageID);
+                user.giatoc = GIATOC[idx];
+                saveData(data);
+                return api.sendMessage(`Bạn đã chọn gia tộc: ${user.giatoc}`, event.threadID, event.messageID);
+            }
+            return api.sendMessage(`Các gia tộc lớn:\n${GIATOC.map((g, i) => `${i + 1}. ${g}`).join("\n")}\n\nChọn: {pn}daupha giatoc chon [id]`, event.threadID, event.messageID);
         }
 
         // Sư phụ
         if (sub === "suphu") {
-            return api.sendMessage(`Các sư phụ nổi bật:\n${SUPHU.map((s, i) => `${i + 1}. ${s}`).join("\n")}`, event.threadID, event.messageID);
+            if (args[1] === "chon" && args[2]) {
+                const idx = parseInt(args[2]) - 1;
+                if (idx < 0 || idx >= SUPHU.length) return api.sendMessage("ID sư phụ không hợp lệ!", event.threadID, event.messageID);
+                user.suphu = SUPHU[idx];
+                saveData(data);
+                return api.sendMessage(`Bạn đã chọn sư phụ: ${user.suphu}`, event.threadID, event.messageID);
+            }
+            return api.sendMessage(`Các sư phụ nổi bật:\n${SUPHU.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nChọn: {pn}daupha suphu chon [id]`, event.threadID, event.messageID);
         }
 
         // Đấu giá
@@ -184,7 +214,15 @@ module.exports = class {
 
         // Luyện dược
         if (sub === "luyenduoc") {
-            return api.sendMessage(`Các loại dược phẩm nổi bật:\n${LUYENDUOC.map(i => `ID: ${i.id} | ${i.name} - ${i.desc}`).join("\n")}`, event.threadID, event.messageID);
+            if (args[1] === "chon" && args[2]) {
+                const idx = parseInt(args[2]) - 1;
+                if (idx < 0 || idx >= LUYENDUOC.length) return api.sendMessage("ID dược phẩm không hợp lệ!", event.threadID, event.messageID);
+                if (!user.items) user.items = [];
+                user.items.push(LUYENDUOC[idx].name);
+                saveData(data);
+                return api.sendMessage(`Bạn đã luyện thành công: ${LUYENDUOC[idx].name}`, event.threadID, event.messageID);
+            }
+            return api.sendMessage(`Các loại dược phẩm nổi bật:\n${LUYENDUOC.map((i, idx) => `${idx + 1}. ${i.name} - ${i.desc}`).join("\n")}\n\nLuyện: {pn}daupha luyenduoc chon [id]`, event.threadID, event.messageID);
         }
 
         return api.sendMessage("Lệnh không hợp lệ. Dùng {pn}daupha [rank|skills|shop|info|douqi|dihoa|giatoc|suphu|daugia|luyenduoc]", event.threadID, event.messageID);
