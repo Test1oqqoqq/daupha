@@ -263,7 +263,32 @@ module.exports = class {
             return api.sendMessage(`Các loại dược phẩm nổi bật:\n${LUYENDUOC.map((i, idx) => `${idx + 1}. ${i.name} - ${i.desc}`).join("\n")}\n\nLuyện: {pn}daupha luyenduoc chon [id] (mỗi lần luyện tốn 100 xu, có thể thất bại)`, event.threadID, event.messageID);
         }
 
-        return api.sendMessage("Lệnh không hợp lệ. Dùng {pn}daupha [rank|skills|shop|info|douqi|dihoa|giatoc|suphu|daugia|luyenduoc]", event.threadID, event.messageID);
+        // MENU tổng hợp
+        if (!sub || sub === "menu") {
+            return api.sendMessage(`🌟 ĐẤU PHÁ THƯƠNG KHUNG MENU 🌟\n\n1. Thông tin nhân vật: {pn}daupha info\n2. Bảng xếp hạng: {pn}daupha rank\n3. Kỹ năng: {pn}daupha skills\n4. Shop: {pn}daupha shop\n5. Đổi/tra cứu Đấu khí: {pn}daupha douqi [chon id]\n6. Nhận/tra cứu Dị hỏa: {pn}daupha dihoa [chon id]\n7. Đổi/tra cứu Gia tộc: {pn}daupha giatoc [chon id]\n8. Đổi/tra cứu Sư phụ: {pn}daupha suphu [chon id]\n9. Đấu giá: {pn}daupha daugia\n10. Luyện dược: {pn}daupha luyenduoc [chon id]\n11. Nhiệm vụ: {pn}daupha quest\n12. PvP đấu trường: {pn}daupha pvp [@tag]\n13. Săn boss: {pn}daupha boss\n14. Chế tạo trang bị: {pn}daupha craft\n\n💡 Dùng {pn}daupha [lệnh] để biết chi tiết!`, event.threadID, event.messageID);
+        }
+        // Quest
+        if (sub === "quest") {
+            // Khung nhiệm vụ demo
+            return api.sendMessage(`🎯 Nhiệm vụ hàng ngày:\n- Luyện dược 1 lần\n- Đổi cấp đấu khí\n- Tham gia PvP\n\n(Chức năng nhiệm vụ sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+        }
+        // PvP
+        if (sub === "pvp") {
+            // Khung PvP demo
+            return api.sendMessage(`⚔️ PvP đấu trường:\nDùng {pn}daupha pvp [@tag] để thách đấu người khác!\n(Chức năng PvP sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+        }
+        // Boss
+        if (sub === "boss") {
+            // Khung săn boss demo
+            return api.sendMessage(`🐲 Săn boss:\nTham gia săn boss nhận vật phẩm hiếm!\n(Chức năng boss sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+        }
+        // Craft
+        if (sub === "craft") {
+            // Khung chế tạo demo
+            return api.sendMessage(`⚒️ Chế tạo trang bị:\nDùng vật phẩm để chế tạo trang bị đặc biệt!\n(Chức năng craft sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+        }
+
+        return api.sendMessage("Lệnh không hợp lệ. Dùng {pn}daupha menu để xem hướng dẫn.", event.threadID, event.messageID);
     }
 
     static async onEvent({ api, event, msg, model, Threads, Users, Currencies, args }) {
