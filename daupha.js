@@ -66,6 +66,11 @@ const QUESTS = [
     { id: 3, name: "Tham gia PvP", desc: "Tham gia 1 trận PvP", reward: "70 xu, 70 EXP" }
 ];
 
+// Dữ liệu mẫu cho market
+const MARKET = [
+    // { id: 1, seller: 'userID', item: 'Thanh Tâm Đan', price: 150 }
+];
+
 module.exports = class {
     static config = {
         name: "daupha",
@@ -278,9 +283,45 @@ module.exports = class {
             return api.sendMessage(`Các loại dược phẩm nổi bật:\n${LUYENDUOC.map((i, idx) => `${idx + 1}. ${i.name} - ${i.desc}`).join("\n")}\n\nLuyện: {pn}daupha luyenduoc chon [id] (mỗi lần luyện tốn 100 xu, có thể thất bại)`, event.threadID, event.messageID);
         }
 
+        // Market
+        if (sub === "market") {
+            if (!args[1]) {
+                // Xem danh sách vật phẩm đang rao bán
+                if (!MARKET.length) return api.sendMessage("Chợ hiện chưa có vật phẩm nào được rao bán!", event.threadID, event.messageID);
+                const list = MARKET.map((m, i) => `${i + 1}. ${m.item} - Giá: ${m.price} xu - Người bán: ${m.seller}`).join("\n");
+                return api.sendMessage(`🛒 Chợ giao dịch:\n${list}\n\nMua: {pn}daupha market mua [id]`, event.threadID, event.messageID);
+            }
+            if (args[1] === "ban" && args[2] && args[3]) {
+                // Đăng bán vật phẩm
+                const itemName = args[2];
+                const price = parseInt(args[3]);
+                if (!user.items || !user.items.includes(itemName)) return api.sendMessage("Bạn không có vật phẩm này để bán!", event.threadID, event.messageID);
+                MARKET.push({ id: MARKET.length + 1, seller: user.name, item: itemName, price });
+                // Xóa vật phẩm khỏi túi đồ (demo)
+                user.items = user.items.filter(i => i !== itemName);
+                saveData(data);
+                return api.sendMessage(`Bạn đã đăng bán ${itemName} với giá ${price} xu trên chợ!`, event.threadID, event.messageID);
+            }
+            if (args[1] === "mua" && args[2]) {
+                // Mua vật phẩm từ chợ (demo)
+                const idx = parseInt(args[2]) - 1;
+                if (idx < 0 || idx >= MARKET.length) return api.sendMessage("ID vật phẩm không hợp lệ!", event.threadID, event.messageID);
+                const item = MARKET[idx];
+                if (user.coins < item.price) return api.sendMessage("Bạn không đủ xu để mua vật phẩm này!", event.threadID, event.messageID);
+                user.coins -= item.price;
+                if (!user.items) user.items = [];
+                user.items.push(item.item);
+                // (Demo) Không cộng xu cho người bán, chỉ xóa khỏi chợ
+                MARKET.splice(idx, 1);
+                saveData(data);
+                return api.sendMessage(`Bạn đã mua ${item.item} với giá ${item.price} xu!`, event.threadID, event.messageID);
+            }
+            return api.sendMessage(`🛒 Chợ giao dịch:\n- Xem chợ: {pn}daupha market\n- Bán vật phẩm: {pn}daupha market ban [tên vật phẩm] [giá]\n- Mua vật phẩm: {pn}daupha market mua [id]`, event.threadID, event.messageID);
+        }
+
         // MENU tổng hợp
         if (!sub || sub === "menu") {
-            return api.sendMessage(`🌟 ĐẤU PHÁ THƯƠNG KHUNG MENU 🌟\n\n1. Thông tin nhân vật: {pn}daupha info\n2. Bảng xếp hạng: {pn}daupha rank\n3. Kỹ năng: {pn}daupha skills\n4. Shop: {pn}daupha shop\n5. Đổi/tra cứu Đấu khí: {pn}daupha douqi [chon id]\n6. Nhận/tra cứu Dị hỏa: {pn}daupha dihoa [chon id]\n7. Đổi/tra cứu Gia tộc: {pn}daupha giatoc [chon id]\n8. Đổi/tra cứu Sư phụ: {pn}daupha suphu [chon id]\n9. Đấu giá: {pn}daupha daugia\n10. Luyện dược: {pn}daupha luyenduoc [chon id]\n11. Nhiệm vụ: {pn}daupha quest\n12. PvP đấu trường: {pn}daupha pvp [@tag]\n13. Săn boss: {pn}daupha boss\n14. Chế tạo trang bị: {pn}daupha craft\n\n💡 Dùng {pn}daupha [lệnh] để biết chi tiết!`, event.threadID, event.messageID);
+            return api.sendMessage(`🌟 ĐẤU PHÁ THƯƠNG KHUNG MENU 🌟\n\n1. Thông tin nhân vật: {pn}daupha info\n2. Bảng xếp hạng: {pn}daupha rank\n3. Kỹ năng: {pn}daupha skills\n4. Shop: {pn}daupha shop\n5. Đổi/tra cứu Đấu khí: {pn}daupha douqi [chon id]\n6. Nhận/tra cứu Dị hỏa: {pn}daupha dihoa [chon id]\n7. Đổi/tra cứu Gia tộc: {pn}daupha giatoc [chon id]\n8. Đổi/tra cứu Sư phụ: {pn}daupha suphu [chon id]\n9. Đấu giá: {pn}daupha daugia\n10. Luyện dược: {pn}daupha luyenduoc [chon id]\n11. Nhiệm vụ: {pn}daupha quest\n12. PvP đấu trường: {pn}daupha pvp [@tag]\n13. Săn boss: {pn}daupha boss\n14. Chế tạo trang bị: {pn}daupha craft\n15. Chợ giao dịch: {pn}daupha market\n\n💡 Dùng {pn}daupha [lệnh] để biết chi tiết!`, event.threadID, event.messageID);
         }
         // Quest
         if (sub === "quest") {
