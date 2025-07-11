@@ -133,11 +133,13 @@ module.exports = class {
                 const itemID = parseInt(args[2]);
                 const item = SHOP.find(i => i.id === itemID);
                 if (!item) return api.sendMessage("ID vật phẩm không hợp lệ!", event.threadID, event.messageID);
-                if (user.coins < item.price) return api.sendMessage("Bạn không đủ xu để mua vật phẩm này!", event.threadID, event.messageID);
-                user.coins -= item.price;
+                let price = item.price;
+                if (user.suphu === "Pháp Lão") price = Math.floor(price * 0.9); // bonus 10% giảm giá
+                if (user.coins < price) return api.sendMessage("Bạn không đủ xu để mua vật phẩm này!", event.threadID, event.messageID);
+                user.coins -= price;
                 user.items.push(itemID);
                 saveData(data);
-                return api.sendMessage(`Bạn đã mua vật phẩm ${item.name}!`, event.threadID, event.messageID);
+                return api.sendMessage(`Bạn đã mua vật phẩm ${item.name}! (giá: ${price} xu)`, event.threadID, event.messageID);
             }
         }
 
@@ -162,11 +164,19 @@ module.exports = class {
             if (args[1] === "chon" && args[2]) {
                 const idx = parseInt(args[2]) - 1;
                 if (idx < 0 || idx >= DOUQI.length) return api.sendMessage("ID đấu khí không hợp lệ!", event.threadID, event.messageID);
+                // Điều kiện lên cấp: đủ EXP
+                const needExp = (idx + 1) * 100;
+                if (user.exp < needExp) return api.sendMessage(`Bạn cần ${needExp} EXP để lên cấp này!`, event.threadID, event.messageID);
+                const oldDouqi = user.douqi;
                 user.douqi = DOUQI[idx];
+                let bonus = 0;
+                if (user.suphu === "Huân Nhi") bonus = Math.floor(needExp * 0.1);
+                user.exp -= needExp;
+                user.coins += 100 + bonus;
                 saveData(data);
-                return api.sendMessage(`Bạn đã chọn cấp bậc đấu khí: ${user.douqi}`, event.threadID, event.messageID);
+                return api.sendMessage(`Chúc mừng! Bạn đã lên cấp đấu khí: ${user.douqi} (mất ${needExp} EXP, nhận ${100 + bonus} xu${bonus > 0 ? ", bonus từ Huân Nhi: " + bonus + " xu" : ""})`, event.threadID, event.messageID);
             }
-            return api.sendMessage(`Các cấp bậc Đấu khí:\n${DOUQI.map((d, i) => `${i + 1}. ${d}`).join("\n")}\n\nChọn: {pn}daupha douqi chon [id]`, event.threadID, event.messageID);
+            return api.sendMessage(`Các cấp bậc Đấu khí:\n${DOUQI.map((d, i) => `${i + 1}. ${d}`).join("\n")}\n\nChọn: {pn}daupha douqi chon [id] (cần đủ EXP, lên cấp nhận xu, bonus nếu có sư phụ)`, event.threadID, event.messageID);
         }
 
         // Dị hỏa
@@ -188,11 +198,18 @@ module.exports = class {
             if (args[1] === "chon" && args[2]) {
                 const idx = parseInt(args[2]) - 1;
                 if (idx < 0 || idx >= GIATOC.length) return api.sendMessage("ID gia tộc không hợp lệ!", event.threadID, event.messageID);
+                const now = Date.now();
+                if (!user.lastChangeClan) user.lastChangeClan = 0;
+                if (now - user.lastChangeClan < 24 * 60 * 60 * 1000) return api.sendMessage("Bạn chỉ được đổi gia tộc 1 lần mỗi ngày!", event.threadID, event.messageID);
+                if (user.coins < 200) return api.sendMessage("Bạn cần 200 xu để đổi gia tộc!", event.threadID, event.messageID);
+                user.coins -= 200;
                 user.giatoc = GIATOC[idx];
+                user.suphu = SUPHU[0]; // reset sư phụ về mặc định
+                user.lastChangeClan = now;
                 saveData(data);
-                return api.sendMessage(`Bạn đã chọn gia tộc: ${user.giatoc}`, event.threadID, event.messageID);
+                return api.sendMessage(`Bạn đã đổi sang gia tộc: ${user.giatoc} (mất 200 xu, sư phụ về mặc định)`, event.threadID, event.messageID);
             }
-            return api.sendMessage(`Các gia tộc lớn:\n${GIATOC.map((g, i) => `${i + 1}. ${g}`).join("\n")}\n\nChọn: {pn}daupha giatoc chon [id]`, event.threadID, event.messageID);
+            return api.sendMessage(`Các gia tộc lớn:\n${GIATOC.map((g, i) => `${i + 1}. ${g}`).join("\n")}\n\nChọn: {pn}daupha giatoc chon [id] (mất 200 xu, mỗi ngày 1 lần)`, event.threadID, event.messageID);
         }
 
         // Sư phụ
@@ -200,9 +217,15 @@ module.exports = class {
             if (args[1] === "chon" && args[2]) {
                 const idx = parseInt(args[2]) - 1;
                 if (idx < 0 || idx >= SUPHU.length) return api.sendMessage("ID sư phụ không hợp lệ!", event.threadID, event.messageID);
+                if (!user.giatoc) return api.sendMessage("Bạn cần vào gia tộc trước khi chọn sư phụ!", event.threadID, event.messageID);
                 user.suphu = SUPHU[idx];
                 saveData(data);
-                return api.sendMessage(`Bạn đã chọn sư phụ: ${user.suphu}`, event.threadID, event.messageID);
+                let bonusMsg = "";
+                if (SUPHU[idx] === "Dược Lão") bonusMsg = "(Bonus: +20% EXP khi luyện dược thành công)";
+                if (SUPHU[idx] === "Pháp Lão") bonusMsg = "(Bonus: -10% giá vật phẩm shop)";
+                if (SUPHU[idx] === "Hàn Phong") bonusMsg = "(Bonus: +10% tỉ lệ luyện dược thành công)";
+                if (SUPHU[idx] === "Huân Nhi") bonusMsg = "(Bonus: +10% EXP khi lên cấp đấu khí)";
+                return api.sendMessage(`Bạn đã chọn sư phụ: ${user.suphu} ${bonusMsg}`, event.threadID, event.messageID);
             }
             return api.sendMessage(`Các sư phụ nổi bật:\n${SUPHU.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nChọn: {pn}daupha suphu chon [id]`, event.threadID, event.messageID);
         }
@@ -217,12 +240,27 @@ module.exports = class {
             if (args[1] === "chon" && args[2]) {
                 const idx = parseInt(args[2]) - 1;
                 if (idx < 0 || idx >= LUYENDUOC.length) return api.sendMessage("ID dược phẩm không hợp lệ!", event.threadID, event.messageID);
-                if (!user.items) user.items = [];
-                user.items.push(LUYENDUOC[idx].name);
-                saveData(data);
-                return api.sendMessage(`Bạn đã luyện thành công: ${LUYENDUOC[idx].name}`, event.threadID, event.messageID);
+                const price = 100; // Giá luyện mỗi loại dược phẩm (có thể mở rộng từng loại)
+                if (user.coins < price) return api.sendMessage(`Bạn cần ${price} xu để luyện dược phẩm này!`, event.threadID, event.messageID);
+                // Tính xác suất thành công
+                let successRate = 0.7;
+                if (user.suphu === "Hàn Phong") successRate += 0.1;
+                const isSuccess = Math.random() < successRate;
+                user.coins -= price;
+                if (isSuccess) {
+                    if (!user.items) user.items = [];
+                    user.items.push(LUYENDUOC[idx].name);
+                    let exp = 50;
+                    if (user.suphu === "Dược Lão") exp = Math.floor(exp * 1.2);
+                    user.exp += exp;
+                    saveData(data);
+                    return api.sendMessage(`Bạn đã luyện thành công: ${LUYENDUOC[idx].name}! Nhận ${exp} EXP.`, event.threadID, event.messageID);
+                } else {
+                    saveData(data);
+                    return api.sendMessage(`Luyện thất bại! Bạn đã mất ${price} xu.`, event.threadID, event.messageID);
+                }
             }
-            return api.sendMessage(`Các loại dược phẩm nổi bật:\n${LUYENDUOC.map((i, idx) => `${idx + 1}. ${i.name} - ${i.desc}`).join("\n")}\n\nLuyện: {pn}daupha luyenduoc chon [id]`, event.threadID, event.messageID);
+            return api.sendMessage(`Các loại dược phẩm nổi bật:\n${LUYENDUOC.map((i, idx) => `${idx + 1}. ${i.name} - ${i.desc}`).join("\n")}\n\nLuyện: {pn}daupha luyenduoc chon [id] (mỗi lần luyện tốn 100 xu, có thể thất bại)`, event.threadID, event.messageID);
         }
 
         return api.sendMessage("Lệnh không hợp lệ. Dùng {pn}daupha [rank|skills|shop|info|douqi|dihoa|giatoc|suphu|daugia|luyenduoc]", event.threadID, event.messageID);
