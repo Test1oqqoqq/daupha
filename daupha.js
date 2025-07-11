@@ -14,6 +14,18 @@ function saveData(data) {
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
 }
 
+const MARKET_PATH = path.join(__dirname, "system", "data", "daupha_market.json");
+function loadMarket() {
+    if (!fs.existsSync(MARKET_PATH)) {
+        fs.mkdirSync(path.dirname(MARKET_PATH), { recursive: true });
+        fs.writeFileSync(MARKET_PATH, JSON.stringify([], null, 2));
+    }
+    return JSON.parse(fs.readFileSync(MARKET_PATH));
+}
+function saveMarket(market) {
+    fs.writeFileSync(MARKET_PATH, JSON.stringify(market, null, 2));
+}
+
 const SKILLS = [
     { id: 1, name: "Hỏa Liên", desc: "Tấn công lửa mạnh mẽ", level: 1, price: 100 },
     { id: 2, name: "Băng Phách", desc: "Tấn công băng giá", level: 1, price: 120 },
@@ -285,10 +297,11 @@ module.exports = class {
 
         // Market
         if (sub === "market") {
+            let market = loadMarket();
             if (!args[1]) {
                 // Xem danh sách vật phẩm đang rao bán
-                if (!MARKET.length) return api.sendMessage("Chợ hiện chưa có vật phẩm nào được rao bán!", event.threadID, event.messageID);
-                const list = MARKET.map((m, i) => `${i + 1}. ${m.item} - Giá: ${m.price} xu - Người bán: ${m.seller}`).join("\n");
+                if (!market.length) return api.sendMessage("Chợ hiện chưa có vật phẩm nào được rao bán!", event.threadID, event.messageID);
+                const list = market.map((m, i) => `${i + 1}. ${m.item} - Giá: ${m.price} xu - Người bán: ${m.sellerName}`).join("\n");
                 return api.sendMessage(`🛒 Chợ giao dịch:\n${list}\n\nMua: {pn}daupha market mua [id]`, event.threadID, event.messageID);
             }
             if (args[1] === "ban" && args[2] && args[3]) {
@@ -296,23 +309,28 @@ module.exports = class {
                 const itemName = args[2];
                 const price = parseInt(args[3]);
                 if (!user.items || !user.items.includes(itemName)) return api.sendMessage("Bạn không có vật phẩm này để bán!", event.threadID, event.messageID);
-                MARKET.push({ id: MARKET.length + 1, seller: user.name, item: itemName, price });
-                // Xóa vật phẩm khỏi túi đồ (demo)
+                market.push({ id: market.length + 1, seller: userID, sellerName: user.name, item: itemName, price });
+                // Xóa vật phẩm khỏi túi đồ
                 user.items = user.items.filter(i => i !== itemName);
+                saveMarket(market);
                 saveData(data);
                 return api.sendMessage(`Bạn đã đăng bán ${itemName} với giá ${price} xu trên chợ!`, event.threadID, event.messageID);
             }
             if (args[1] === "mua" && args[2]) {
-                // Mua vật phẩm từ chợ (demo)
+                // Mua vật phẩm từ chợ
                 const idx = parseInt(args[2]) - 1;
-                if (idx < 0 || idx >= MARKET.length) return api.sendMessage("ID vật phẩm không hợp lệ!", event.threadID, event.messageID);
-                const item = MARKET[idx];
+                if (idx < 0 || idx >= market.length) return api.sendMessage("ID vật phẩm không hợp lệ!", event.threadID, event.messageID);
+                const item = market[idx];
                 if (user.coins < item.price) return api.sendMessage("Bạn không đủ xu để mua vật phẩm này!", event.threadID, event.messageID);
                 user.coins -= item.price;
                 if (!user.items) user.items = [];
                 user.items.push(item.item);
-                // (Demo) Không cộng xu cho người bán, chỉ xóa khỏi chợ
-                MARKET.splice(idx, 1);
+                // Cộng xu cho người bán nếu còn tồn tại
+                if (data.users[item.seller]) {
+                    data.users[item.seller].coins += item.price;
+                }
+                market.splice(idx, 1);
+                saveMarket(market);
                 saveData(data);
                 return api.sendMessage(`Bạn đã mua ${item.item} với giá ${item.price} xu!`, event.threadID, event.messageID);
             }
