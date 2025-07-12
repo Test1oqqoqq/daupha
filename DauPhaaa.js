@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { createCanvas, loadImage, registerFont } = require("canvas");
 
 const DATA_PATH = path.join(__dirname, "system", "data", "daupha_data.json");
 const MARKET_PATH = path.join(__dirname, "system", "data", "daupha_market.json");
@@ -23,6 +24,199 @@ function loadMarket() {
 }
 function saveMarket(market) {
     fs.writeFileSync(MARKET_PATH, JSON.stringify(market, null, 2));
+}
+
+// Canvas helper functions
+async function createCharacterCard(user, data) {
+    const canvas = createCanvas(800, 600);
+    const ctx = canvas.getContext('2d');
+    
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+    gradient.addColorStop(0, '#1a1a2e');
+    gradient.addColorStop(1, '#16213e');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 600);
+    
+    // Title
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🌟 ĐẤU PHÁ THƯƠNG KHUNG 🌟', 400, 50);
+    
+    // Character info
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(`👤 Tên: ${user.name}`, 50, 100);
+    ctx.fillText(`📊 Cấp: ${user.level}`, 50, 140);
+    ctx.fillText(`⭐ EXP: ${user.exp}`, 50, 180);
+    ctx.fillText(`💰 Xu: ${user.coins}`, 50, 220);
+    ctx.fillText(`⚔️ Đấu khí: ${user.douqi}`, 50, 260);
+    ctx.fillText(`🔥 Dị hỏa: ${user.dihoa.length || 0}`, 50, 300);
+    ctx.fillText(`🏰 Gia tộc: ${user.giatoc}`, 50, 340);
+    ctx.fillText(`👨‍🏫 Sư phụ: ${user.suphu}`, 50, 380);
+    ctx.fillText(`✨ Tinh: ${user.tinh}`, 50, 420);
+    
+    // Border
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, 10, 780, 580);
+    
+    return canvas.toBuffer();
+}
+
+async function createRankingCard(data) {
+    const canvas = createCanvas(800, 600);
+    const ctx = canvas.getContext('2d');
+    
+    // Background
+    const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+    gradient.addColorStop(0, '#2c3e50');
+    gradient.addColorStop(1, '#34495e');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 600);
+    
+    // Title
+    ctx.fillStyle = '#f1c40f';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆 BẢNG XẾP HẠNG ĐẤU PHÁ 🏆', 400, 50);
+    
+    // Top players
+    const top = Object.values(data.users)
+        .sort((a, b) => b.level - a.level || b.exp - a.exp)
+        .slice(0, 5);
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'left';
+    
+    top.forEach((user, i) => {
+        const y = 120 + i * 80;
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🏅';
+        ctx.fillText(`${medal} ${i + 1}. ${user.name}`, 100, y);
+        ctx.fillText(`Cấp: ${user.level} | EXP: ${user.exp}`, 100, y + 30);
+    });
+    
+    // Border
+    ctx.strokeStyle = '#f1c40f';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, 10, 780, 580);
+    
+    return canvas.toBuffer();
+}
+
+async function createSkillCard(skills, userSkills) {
+    const canvas = createCanvas(800, 600);
+    const ctx = canvas.getContext('2d');
+    
+    // Background
+    const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+    gradient.addColorStop(0, '#8e44ad');
+    gradient.addColorStop(1, '#9b59b6');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 600);
+    
+    // Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚔️ KỸ NĂNG ĐẤU PHÁ ⚔️', 400, 50);
+    
+    // Skills list
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'left';
+    
+    skills.forEach((skill, i) => {
+        const y = 100 + i * 60;
+        const hasSkill = userSkills.includes(skill.id);
+        ctx.fillStyle = hasSkill ? '#2ecc71' : '#ffffff';
+        ctx.fillText(`${skill.id}. ${skill.name} - ${skill.desc}`, 50, y);
+        ctx.fillText(`Giá: ${skill.price} xu`, 50, y + 25);
+    });
+    
+    // Border
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, 10, 780, 580);
+    
+    return canvas.toBuffer();
+}
+
+async function createShopCard(shop) {
+    const canvas = createCanvas(800, 600);
+    const ctx = canvas.getContext('2d');
+    
+    // Background
+    const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+    gradient.addColorStop(0, '#27ae60');
+    gradient.addColorStop(1, '#2ecc71');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 600);
+    
+    // Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🛒 CỬA HÀNG ĐẤU PHÁ 🛒', 400, 50);
+    
+    // Shop items
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'left';
+    
+    shop.forEach((item, i) => {
+        const y = 100 + i * 80;
+        ctx.fillText(`${item.id}. ${item.name}`, 50, y);
+        ctx.fillText(`Mô tả: ${item.desc}`, 50, y + 25);
+        ctx.fillText(`💰 Giá: ${item.price} xu`, 50, y + 50);
+    });
+    
+    // Border
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, 10, 780, 580);
+    
+    return canvas.toBuffer();
+}
+
+async function createBossCard(bosses) {
+    const canvas = createCanvas(800, 600);
+    const ctx = canvas.getContext('2d');
+    
+    // Background
+    const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+    gradient.addColorStop(0, '#c0392b');
+    gradient.addColorStop(1, '#e74c3c');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 600);
+    
+    // Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🐲 BOSS ĐẤU PHÁ 🐲', 400, 50);
+    
+    // Boss list
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'left';
+    
+    bosses.forEach((boss, i) => {
+        const y = 100 + i * 100;
+        ctx.fillText(`${boss.id}. ${boss.name}`, 50, y);
+        ctx.fillText(`❤️ HP: ${boss.hp}`, 50, y + 25);
+        ctx.fillText(`🎁 Thưởng: ${boss.reward}`, 50, y + 50);
+    });
+    
+    // Border
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, 10, 780, 580);
+    
+    return canvas.toBuffer();
 }
 
 const SKILLS = [
@@ -75,10 +269,10 @@ module.exports = class {
     static config = {
         name: "dauphaaa",
         aliases: ["daupha", "dauphatruyen", "dpt"],
-        version: "2.1.0",
+        version: "2.2.0",
         role: 0,
         author: "Panna",
-        info: "Đấu Phá Thương Khung: menu, info, rank, skills, shop, douqi, dihoa, giatoc, suphu, daugia, luyenduoc, quest, pvp, boss, craft, market, tinh.",
+        info: "Đấu Phá Thương Khung: menu, info, rank, skills, shop, douqi, dihoa, giatoc, suphu, daugia, luyenduoc, quest, pvp, boss, craft, market, tinh với Canvas.",
         Category: "Truyện",
         guides: "{pn}dauphaaa menu",
         cd: 5,
@@ -113,43 +307,70 @@ module.exports = class {
             return api.sendMessage(`🌟 ĐẤU PHÁ THƯƠNG KHUNG MENU 🌟\n\n1. Thông tin nhân vật: {pn}dauphaaa info\n2. Bảng xếp hạng: {pn}dauphaaa rank\n3. Kỹ năng: {pn}dauphaaa skills\n4. Shop: {pn}dauphaaa shop\n5. Đổi/tra cứu Đấu khí: {pn}dauphaaa douqi [chon id]\n6. Nhận/tra cứu Dị hỏa: {pn}dauphaaa dihoa [chon id]\n7. Đổi/tra cứu Gia tộc: {pn}dauphaaa giatoc [chon id]\n8. Đổi/tra cứu Sư phụ: {pn}dauphaaa suphu [chon id]\n9. Đấu giá: {pn}dauphaaa daugia\n10. Luyện dược: {pn}dauphaaa luyenduoc [chon id]\n11. Nhiệm vụ: {pn}dauphaaa quest\n12. PvP đấu trường: {pn}dauphaaa pvp [@tag]\n13. Săn boss: {pn}dauphaaa boss\n14. Chế tạo trang bị: {pn}dauphaaa craft\n15. Chợ giao dịch: {pn}dauphaaa market\n16. Đấu phá vượt cảnh giới: {pn}dauphaaa tinh [chon id]\n\n💡 Dùng {pn}dauphaaa [lệnh] để biết chi tiết!`, event.threadID, event.messageID);
         }
 
-        // Info
+        // Info với Canvas
         if (sub === "info") {
-            const mySkills = user.skills.map(id => {
-                const sk = SKILLS.find(s => s.id === id);
-                return sk ? sk.name : "";
-            }).join(", ") || "Không có";
-            const myItems = user.items.map(id => {
-                const it = SHOP.find(i => i.id === id);
-                return it ? it.name : "";
-            }).join(", ") || "Không có";
-            return api.sendMessage(
-                `👤 Thông tin nhân vật:\nTên: ${user.name}\nCấp: ${user.level}\nEXP: ${user.exp}\nXu: ${user.coins}\nKỹ năng: ${mySkills}\nVật phẩm: ${myItems}\nĐấu khí: ${user.douqi}\nDị hỏa: ${(user.dihoa && user.dihoa.length) ? user.dihoa.join(", ") : "Không có"}\nGia tộc: ${user.giatoc}\nSư phụ: ${user.suphu}\nTinh: ${user.tinh}`,
-                event.threadID, event.messageID
-            );
+            try {
+                const imageBuffer = await createCharacterCard(user, data);
+                return api.sendMessage({
+                    body: `👤 Thông tin nhân vật của ${user.name}`,
+                    attachment: imageBuffer
+                }, event.threadID, event.messageID);
+            } catch (error) {
+                // Fallback to text if Canvas fails
+                const mySkills = user.skills.map(id => {
+                    const sk = SKILLS.find(s => s.id === id);
+                    return sk ? sk.name : "";
+                }).join(", ") || "Không có";
+                const myItems = user.items.map(id => {
+                    const it = SHOP.find(i => i.id === id);
+                    return it ? it.name : "";
+                }).join(", ") || "Không có";
+                return api.sendMessage(
+                    `👤 Thông tin nhân vật:\nTên: ${user.name}\nCấp: ${user.level}\nEXP: ${user.exp}\nXu: ${user.coins}\nKỹ năng: ${mySkills}\nVật phẩm: ${myItems}\nĐấu khí: ${user.douqi}\nDị hỏa: ${(user.dihoa && user.dihoa.length) ? user.dihoa.join(", ") : "Không có"}\nGia tộc: ${user.giatoc}\nSư phụ: ${user.suphu}\nTinh: ${user.tinh}`,
+                    event.threadID, event.messageID
+                );
+            }
         }
 
-        // Rank
+        // Rank với Canvas
         if (sub === "rank") {
-            const top = Object.values(data.users)
-                .sort((a, b) => b.level - a.level || b.exp - a.exp)
-                .slice(0, 5)
-                .map((u, i) => `${i + 1}. ${u.name} - Cấp: ${u.level}, EXP: ${u.exp}`)
-                .join("\n");
-            return api.sendMessage(`🏆 Bảng xếp hạng Đấu Phá:\n${top}`, event.threadID, event.messageID);
+            try {
+                const imageBuffer = await createRankingCard(data);
+                return api.sendMessage({
+                    body: `🏆 Bảng xếp hạng Đấu Phá`,
+                    attachment: imageBuffer
+                }, event.threadID, event.messageID);
+            } catch (error) {
+                // Fallback to text if Canvas fails
+                const top = Object.values(data.users)
+                    .sort((a, b) => b.level - a.level || b.exp - a.exp)
+                    .slice(0, 5)
+                    .map((u, i) => `${i + 1}. ${u.name} - Cấp: ${u.level}, EXP: ${u.exp}`)
+                    .join("\n");
+                return api.sendMessage(`🏆 Bảng xếp hạng Đấu Phá:\n${top}`, event.threadID, event.messageID);
+            }
         }
 
-        // Skills
+        // Skills với Canvas
         if (sub === "skills") {
             if (!args[1]) {
-                const mySkills = user.skills.length
-                    ? user.skills.map(id => {
-                        const sk = SKILLS.find(s => s.id === id);
-                        return sk ? `- ${sk.name} (Lv${sk.level}): ${sk.desc}` : "";
-                    }).join("\n")
-                    : "Bạn chưa có kỹ năng nào. Dùng {pn}dauphaaa skills buy [id] để mua.";
-                const allSkills = SKILLS.map(s => `ID: ${s.id} | ${s.name} (Lv${s.level}) - ${s.desc} | Giá: ${s.price} xu`).join("\n");
-                return api.sendMessage(`Kỹ năng của bạn:\n${mySkills}\n\nKỹ năng có thể mua:\n${allSkills}\n\nMua: {pn}dauphaaa skills buy [id]`, event.threadID, event.messageID);
+                try {
+                    const imageBuffer = await createSkillCard(SKILLS, user.skills);
+                    return api.sendMessage({
+                        body: `⚔️ Kỹ năng của bạn\nMua: {pn}dauphaaa skills buy [id]`,
+                        attachment: imageBuffer
+                    }, event.threadID, event.messageID);
+                } catch (error) {
+                    // Fallback to text if Canvas fails
+                    const mySkills = user.skills.length
+                        ? user.skills.map(id => {
+                            const sk = SKILLS.find(s => s.id === id);
+                            return sk ? `- ${sk.name} (Lv${sk.level}): ${sk.desc}` : "";
+                        }).join("\n")
+                        : "Bạn chưa có kỹ năng nào. Dùng {pn}dauphaaa skills buy [id] để mua.";
+                    const allSkills = SKILLS.map(s => `ID: ${s.id} | ${s.name} (Lv${s.level}) - ${s.desc} | Giá: ${s.price} xu`).join("\n");
+                    return api.sendMessage(`Kỹ năng của bạn:\n${mySkills}\n\nKỹ năng có thể mua:\n${allSkills}\n\nMua: {pn}dauphaaa skills buy [id]`, event.threadID, event.messageID);
+                }
             }
             if (args[1] === "buy" && args[2]) {
                 const skillID = parseInt(args[2]);
@@ -164,11 +385,20 @@ module.exports = class {
             }
         }
 
-        // Shop
+        // Shop với Canvas
         if (sub === "shop") {
             if (!args[1]) {
-                const shopList = SHOP.map(i => `ID: ${i.id} | ${i.name} - ${i.desc} | Giá: ${i.price} xu`).join("\n");
-                return api.sendMessage(`Cửa hàng Đấu Phá:\n${shopList}\n\nMua: {pn}dauphaaa shop buy [id]`, event.threadID, event.messageID);
+                try {
+                    const imageBuffer = await createShopCard(SHOP);
+                    return api.sendMessage({
+                        body: `🛒 Cửa hàng Đấu Phá\nMua: {pn}dauphaaa shop buy [id]`,
+                        attachment: imageBuffer
+                    }, event.threadID, event.messageID);
+                } catch (error) {
+                    // Fallback to text if Canvas fails
+                    const shopList = SHOP.map(i => `ID: ${i.id} | ${i.name} - ${i.desc} | Giá: ${i.price} xu`).join("\n");
+                    return api.sendMessage(`Cửa hàng Đấu Phá:\n${shopList}\n\nMua: {pn}dauphaaa shop buy [id]`, event.threadID, event.messageID);
+                }
             }
             if (args[1] === "buy" && args[2]) {
                 const itemID = parseInt(args[2]);
@@ -314,8 +544,17 @@ module.exports = class {
 
         // Boss
         if (sub === "boss") {
-            const bossList = BOSSES.map(b => `ID: ${b.id} | ${b.name} - HP: ${b.hp} | Thưởng: ${b.reward}`).join("\n");
-            return api.sendMessage(`🐲 Boss hiện tại:\n${bossList}\n\nDùng {pn}dauphaaa boss danh [id] để tấn công!\n(Chức năng boss sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+            try {
+                const imageBuffer = await createBossCard(BOSSES);
+                return api.sendMessage({
+                    body: `🐲 Boss hiện tại\nDùng {pn}dauphaaa boss danh [id] để tấn công!`,
+                    attachment: imageBuffer
+                }, event.threadID, event.messageID);
+            } catch (error) {
+                // Fallback to text if Canvas fails
+                const bossList = BOSSES.map(b => `ID: ${b.id} | ${b.name} - HP: ${b.hp} | Thưởng: ${b.reward}`).join("\n");
+                return api.sendMessage(`🐲 Boss hiện tại:\n${bossList}\n\nDùng {pn}dauphaaa boss danh [id] để tấn công!\n(Chức năng boss sẽ được cập nhật chi tiết sau!)`, event.threadID, event.messageID);
+            }
         }
 
         // Craft
