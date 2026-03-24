@@ -1,5 +1,7 @@
-local Window = TestGui:Window({
-    Title = "Isotopia",
+local Isotopia = loadstring(game:HttpGet("https://raw.githubusercontent.com/Test1oqqoqq/daupha/main/Test.lua"))()
+
+local Window = Isotopia:Window({
+    Title = "TestGui Tuznnnnnnnnnnn",
     Icon = "rbxassetid://107819132007001", -- can be lucide icon too
     Transparent = false,
     Size = UDim2.fromOffset(648, 429),
